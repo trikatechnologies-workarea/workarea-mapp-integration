@@ -9,10 +9,10 @@ Gem::Specification.new do |spec|
   spec.version     = Workarea::MappIntegration::VERSION
   spec.authors     = ["Satya.Tejadvs"]
   spec.email       = ["sathyteja.dvs@trikatechnologies.com"]
-  spec.homepage    = "TODO"
-  spec.summary     = "TODO: Summary of Workarea::MappIntegration."
-  spec.description = "TODO: Description of Workarea::MappIntegration."
-  spec.license     = "MIT"
+  spec.homepage    = "https://github.com/trikatechnologies"
+  spec.summary     = "MAPP Integration"
+  spec.description = "Email subscription will be enabled through integration with Mapp Email Marketing System."
+  spec.license     = "Business Software License"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
@@ -23,7 +23,6 @@ Gem::Specification.new do |spec|
       "public gem pushes."
   end
 
-  spec.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
-
-  spec.add_dependency "rails", "~> 5.2.4", ">= 5.2.4.5"
+  spec.files = `git ls-files`.split("\n")
+  spec.add_dependency 'workarea', '~> 3.x'
 end
