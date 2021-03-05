@@ -51,9 +51,9 @@ module Workarea
       end
 
       # query for membership_subscribe_by_email
-      def membership_subscribe_by_email_api_query(user)
+      def membership_subscribe_by_email_api_query(email)
         {
-          "email" => user.email,
+          "email" => email,
           "groupId" => "#{Rails.application.secrets.mapp_integration[:group_id]}",
           "subscriptionMode" => "#{Rails.application.secrets.mapp_integration[:subscription_mode]}"
         }
@@ -96,7 +96,7 @@ module Workarea
 
       # Method triggers when membership subscribe by email.
       def membership_subscribe_by_email(user)
-        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/subscribeByEmail", headers: headers, query: membership_subscribe_by_email_api_query(user) )
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/subscribeByEmail", headers: headers, query: membership_subscribe_by_email_api_query(user.email) )
       end
 
       # Method triggers when user is updated.
@@ -136,6 +136,10 @@ module Workarea
         rescue Timeout::Error => e
           Rails.logger.info "Rescued #{e.message}"
         end
+      end
+
+      def membership_subscribe_from_billing_address(email)
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/subscribeByEmail", headers: headers, query: membership_subscribe_by_email_api_query(email) )
       end
     end
   end
