@@ -19,15 +19,46 @@ module Workarea
         }
       end
 
-      # This method greps the user and assaigns the value to email.
-      def user_creation_api_query(user)
+      # Membership subscribe API#
+      def membership_subscribe_by_email(user)
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/subscribeByEmail", headers: headers, query: membership_subscribe_by_email_api_query(user.email) )
+      end
+
+      def membership_subscribe_by_email_api_query(email)
         {
-          "email" => user.email
+          "email" => email,
+          "groupId" => "#{Rails.application.secrets.mapp_integration[:group_id]}",
+          "subscriptionMode" => "#{Rails.application.secrets.mapp_integration[:subscription_mode]}"
         }
       end
 
-      # This method greps the user and assaigns the values and especially written for api body.
-      def user_creation_api_body(user)
+      # Membership Unsubscribe API#
+      def membership_unsubscribe_by_email(user)
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/unsubscribeByEmail", headers: headers, query: membership_unsubscribe_by_email_api_query(user))
+      end
+ 
+      def membership_unsubscribe_by_email_api_query(user)
+        {
+          "email" => user.email,
+          "groupId" => "#{Rails.application.secrets.mapp_integration[:group_id]}"
+        }
+      end
+
+      # Account Creation API#
+      def mapp_integration_for_user_creation(user) # Method triggers when creating the account in workarea
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: user_creation_api_query(user), body: user_creation_api_body(user))
+        membership_subscribe_by_email(user)
+        user_creation_transaction_api(response)
+      end
+
+      def user_creation_api_query(user) # This method greps the user and assaigns the value to email.
+        {
+          "email" => user.email,
+          "messageId" => "#{Rails.application.secrets.mapp_integration[:user_create_api_message_id]}"
+        }
+      end
+      
+      def user_creation_api_body(user) # This method greps the user and assaigns the values and especially written for api body.
         [
           {
           "name" => 'email',
@@ -36,8 +67,73 @@ module Workarea
         ].to_json
       end
 
-      # Request body for update_user api
-      def update_user_api_email_body(user)
+      def user_creation_transaction_api(response)
+        transaction = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/message/sendTransactional", headers: headers, query: user_creation_transaction_api_query(response), body: mapp_email_signup_transaction_api_body(response))
+      end
+
+      def user_creation_transaction_api_query(response)
+        {
+          "recipientId" => response.parsed_response["id"],
+          "messageId" => "#{Rails.application.secrets.mapp_integration[:user_create_api_message_id]}",
+          "externalTransactionFormula" => "null"
+        }
+      end
+
+      # Email signup API#
+      def mapp_integration_email_signup_api(signup_data)
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: mapp_email_signup_api_query(signup_data), body: mapp_email_signup_api_body(signup_data))
+        membership_subscribe_by_email(signup_data)
+        mapp_email_signup_transaction_api(response)
+      end
+
+      def mapp_email_signup_api_query(signup_data)
+        {
+          "email" => signup_data.email
+        }
+      end
+
+      def mapp_email_signup_api_body(signup_data)
+        [
+          {
+          "name" => 'email',
+          "value" => signup_data.email
+          }
+        ].to_json
+      end
+
+      def mapp_email_signup_transaction_api(response)
+        HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/message/sendTransactional", headers: headers, query: mapp_email_signup_transaction_api_query(response), body: mapp_email_signup_transaction_api_body(response))
+      end
+
+      def mapp_email_signup_transaction_api_query(response)
+        {
+          "recipientId" => response.parsed_response["id"],
+          "messageId" => "#{Rails.application.secrets.mapp_integration[:email_signup_api_message_id]}",
+          "externalTransactionFormula" => "null"
+        }
+      end
+
+      def mapp_email_signup_transaction_api_body(response)
+        {
+        "parameters" =>
+          [
+            {"name" => "Parameter Name 1","value" => "Parameter Value 1"},
+            {"name" => "Parameter Name 2","value" => "Parameter Value 2"}
+          ]
+        }.to_json
+      end
+      # Update User API#
+      def mapp_integration_for_update_user(user) # Method triggers when user is updated in workarea
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/updateProfileByEmail", headers: headers, query: update_user_creation_api_query(user), body: update_user_creation_api_body(user))
+      end
+
+      def update_user_creation_api_query(user)
+        {
+          "email" => user.email
+        }
+      end
+      
+      def update_user_creation_api_body(user) # Request body for update_user api
         [
           {
             "name" => "email",
@@ -50,75 +146,58 @@ module Workarea
         ].to_json
       end
 
-      # query for membership_subscribe_by_email
-      def membership_subscribe_by_email_api_query(email)
-        {
-          "email" => email,
-          "groupId" => "#{Rails.application.secrets.mapp_integration[:group_id]}",
-          "subscriptionMode" => "#{Rails.application.secrets.mapp_integration[:subscription_mode]}"
-        }
+      # Catalog Form API#
+      def mapp_email_signup_from_catalog_form(user)
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: catalog_form_user_creation_api_query(user), body: catalog_form_user_creation_api_body(user))
+        membership_subscribe_by_email(user)
+        catalog_form_transaction_api(response)
       end
 
-      # Query for membership_unsubscribe_by_email_api_query
-      def membership_unsubscribe_by_email_api_query(user)
+      def catalog_form_user_creation_api_query(user)
         {
           "email" => user.email,
-          "groupId" => "#{Rails.application.secrets.mapp_integration[:group_id]}"
+          "messageId" => "#{Rails.application.secrets.mapp_integration[:catalog_request_api_message_id]}"
         }
       end
 
-      # Query for get_user_by_email_api.
-      def user_get_by_email_query(email)
+      def catalog_form_user_creation_api_body(user)
+        [
+          {
+          "name" => 'email',
+          "value" => user.email
+          }
+        ].to_json
+      end
+
+      def catalog_form_transaction_api(response)
+        HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/message/sendTransactional", headers: headers, query: catalog_form_transaction_api_query(response), body: mapp_email_signup_transaction_api_body(response))
+      end
+
+      def catalog_form_transaction_api_query(response)
         {
-          "email" => email
+          "recipientId" => response.parsed_response["id"],
+          "messageId" => "#{Rails.application.secrets.mapp_integration[:catalog_request_api_message_id]}",
+          "externalTransactionFormula" => "null"
         }
       end
 
-      # Query for order placed api.
-      def order_placed_api_query(order, user_id)
-        {
-          "recipientId" => "#{user_id}",
-          "messageId" => "#{Rails.application.secrets.mapp_integration[:message_id]}",
-          "externalTransactionFormula" => "#{order.id}"
-        }
-      end
-
-      # Calling the sendTransactionalWithEventDetails api body from order.decorator in the DT project
-      def order_placed_api_body(order, user_id)
-        order.mapp_order_placed_api_body(order, user_id)
-      end
-
-      # Method triggers when creating the account
-      def mapp_integration_for_user_creation(user)
-        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: user_creation_api_query(user), body: user_creation_api_body(user))
-        membership_subscribe_by_email(user)
-      end
-
-      # Method triggers when membership subscribe by email.
-      def membership_subscribe_by_email(user)
-        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/subscribeByEmail", headers: headers, query: membership_subscribe_by_email_api_query(user.email) )
-      end
-
-      # Method triggers when user is updated.
-      def mapp_integration_for_update_user(user)
-        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/updateProfileByEmail", headers: headers, query: user_creation_api_query(user), body: update_user_api_email_body(user))
-      end
-
-      # Method triggers when membership unsubscribe by email.
-      def membership_unsubscribe_by_email(user)
-        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/unsubscribeByEmail", headers: headers, query: membership_unsubscribe_by_email_api_query(user))
-      end
-
-      # Creating the account in mapp for guest user in workarea. 
-      def user_creation_for_guest_user(user)
-        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: user_creation_api_query(user), body: user_creation_api_body(user))
-      end
-      
+      # Order placed API #
       # Hitting order placed api when we place order in workarea.
       def mapp_integration_for_order_placed(order, user_id)
         response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/message/sendTransactionalWithEventDetails", headers: headers, query: order_placed_api_query(order, user_id), body: order_placed_api_body(order, user_id))
       end
 
+      def order_placed_api_query(order, user_id)
+        {
+          "recipientId" => "#{user_id}",
+          "messageId" => "#{Rails.application.secrets.mapp_integration[:order_placed_api_message_id]}",
+          "externalTransactionFormula" => "#{order.id}"
+        }
+      end
+
+      def order_placed_api_body(order, user_id) # Calling the sendTransactionalWithEventDetails api body from order.decorator in the DT project
+        order.mapp_order_placed_api_body(order, user_id)
+      end
       # Hitting user get by email api to verify the user existance. If yes, we are calling the sendTransactionalWithEventDetails api.
       # If user is not present(i.e., guest user in workarea) in mapp, we are calling user_creation api and from there fetching the mappuser_id. 
       def get_user_by_email(order)
@@ -138,8 +217,25 @@ module Workarea
         end
       end
 
+      def user_get_by_email_query(email)
+        {
+          "email" => email
+        }
+      end
+
+      # Creating the account in mapp for guest user in workarea. 
+      def user_creation_for_guest_user(user)
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: user_creation_api_query(user), body: user_creation_api_body(user))
+      end
+
+      # Subscribe by Email API when subscribing from billing address#
       def membership_subscribe_from_billing_address(email)
-        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/subscribeByEmail", headers: headers, query: membership_subscribe_by_email_api_query(email) )
+        HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/membership/subscribeByEmail", headers: headers, query: membership_subscribe_by_email_api_query(email) )
+      end
+
+      def subscribe_from_billing_address_transaction(email)
+        response = HTTParty.get("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/getByEmail", headers: headers, query: user_get_by_email_query(email))
+        mapp_email_signup_transaction_api(response)
       end
     end
   end

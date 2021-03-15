@@ -15,7 +15,7 @@ module Workarea
       if mapp_integration_flag == true
         signup_data = Workarea::Email::Signup.find(id)
         #Hitting user_create and membership_subscribe_by_email api's by hitting 'mapp_integration_for_user_creation' method.
-        Workarea::MappIntegration::MappIntegrationGateway.new.mapp_integration_for_user_creation(signup_data)
+        Workarea::MappIntegration::MappIntegrationGateway.new.mapp_integration_email_signup_api(signup_data)
       end
     end
   end
