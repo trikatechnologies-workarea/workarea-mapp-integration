@@ -149,8 +149,14 @@ module Workarea
       # Catalog Form API#
       def mapp_email_signup_from_catalog_form(user)
         response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: catalog_form_user_creation_api_query(user), body: catalog_form_user_creation_api_body(user))
-        membership_subscribe_by_email(user)
-        catalog_form_transaction_api(response)
+        if response.code != '200' || response.code != '204'
+          resp = get_user_by_email_for_catalog(user)
+          membership_subscribe_by_email(user)
+          catalog_form_transaction_api(resp)
+        else
+          membership_subscribe_by_email(user)
+          catalog_form_transaction_api(response)
+        end
       end
 
       def catalog_form_user_creation_api_query(user)
@@ -170,7 +176,7 @@ module Workarea
       end
 
       def catalog_form_transaction_api(response)
-        HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/message/sendTransactional", headers: headers, query: catalog_form_transaction_api_query(response), body: mapp_email_signup_transaction_api_body(response))
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/message/sendTransactional", headers: headers, query: catalog_form_transaction_api_query(response), body: mapp_email_signup_transaction_api_body(response))
       end
 
       def catalog_form_transaction_api_query(response)
@@ -236,6 +242,10 @@ module Workarea
       def subscribe_from_billing_address_transaction(email)
         response = HTTParty.get("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/getByEmail", headers: headers, query: user_get_by_email_query(email))
         mapp_email_signup_transaction_api(response)
+      end
+
+      def get_user_by_email_for_catalog(user)
+        response = HTTParty.get("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/getByEmail", headers: headers, query: user_get_by_email_query(user.email))
       end
     end
   end
