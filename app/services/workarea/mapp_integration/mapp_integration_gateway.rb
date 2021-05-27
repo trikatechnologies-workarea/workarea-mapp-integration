@@ -47,8 +47,14 @@ module Workarea
       # Account Creation API#
       def mapp_integration_for_user_creation(user) # Method triggers when creating the account in workarea
         response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: user_creation_api_query(user), body: user_creation_api_body(user))
-        membership_subscribe_by_email(user)
-        user_creation_transaction_api(response)
+        if response.code != '200' || response.code != '204'
+          resp = get_user_by_email_for_catalog(user)
+          membership_subscribe_by_email(user)
+          user_creation_transaction_api(resp)
+        else
+          membership_subscribe_by_email(user)
+          user_creation_transaction_api(response)
+        end
       end
 
       def user_creation_api_query(user) # This method greps the user and assaigns the value to email.
