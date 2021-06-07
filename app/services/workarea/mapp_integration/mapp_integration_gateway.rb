@@ -164,6 +164,20 @@ module Workarea
           catalog_form_transaction_api(response)
         end
       end
+      
+      # Welcome API#
+      def mapp_welcome_email_signup(user)
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: catalog_form_user_creation_api_query(user), body: catalog_form_user_creation_api_body(user))
+        if response.code != '200' || response.code != '204'
+          resp = get_user_by_email_for_catalog(user)
+          membership_subscribe_by_email(user)
+          welcome_form_transaction_api(resp)
+        else
+          membership_subscribe_by_email(user)
+          welcome_form_transaction_api(response)
+        end
+      end
+      
 
       def catalog_form_user_creation_api_query(user)
         {
@@ -185,10 +199,22 @@ module Workarea
         response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/message/sendTransactional", headers: headers, query: catalog_form_transaction_api_query(response), body: mapp_email_signup_transaction_api_body(response))
       end
 
+      def welcome_form_transaction_api(response)
+        response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/message/sendTransactional", headers: headers, query: welcome_form_transaction_api_query(response), body: mapp_email_signup_transaction_api_body(response))
+      end
+
       def catalog_form_transaction_api_query(response)
         {
           "recipientId" => response.parsed_response["id"],
           "messageId" => "#{Rails.application.secrets.mapp_integration[:catalog_request_api_message_id]}",
+          "externalTransactionFormula" => "null"
+        }
+      end
+
+      def welcome_form_transaction_api_query(response)
+        {
+          "recipientId" => response.parsed_response["id"],
+          "messageId" => "#{Rails.application.secrets.mapp_integration[:email_signup_api_message_id]}",
           "externalTransactionFormula" => "null"
         }
       end
