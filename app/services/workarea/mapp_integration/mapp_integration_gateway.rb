@@ -49,10 +49,10 @@ module Workarea
         response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: user_creation_api_query(user), body: user_creation_api_body(user))
         if response.code != '200' || response.code != '204'
           resp = get_user_by_email_for_catalog(user)
-          membership_subscribe_by_email(user)
+          # membership_subscribe_by_email(user)
           user_creation_transaction_api(resp)
         else
-          membership_subscribe_by_email(user)
+          # membership_subscribe_by_email(user)
           user_creation_transaction_api(response)
         end
       end
@@ -89,7 +89,7 @@ module Workarea
       def mapp_integration_email_signup_api(signup_data)
         response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: mapp_email_signup_api_query(signup_data), body: mapp_email_signup_api_body(signup_data))
         membership_subscribe_by_email(signup_data)
-        mapp_email_signup_transaction_api(response)
+        # mapp_email_signup_transaction_api(response)
       end
 
       def mapp_email_signup_api_query(signup_data)
@@ -157,10 +157,10 @@ module Workarea
         response = HTTParty.post("#{Rails.application.secrets.mapp_integration[:api_endpoint]}"+"/user/create", headers: headers, query: catalog_form_user_creation_api_query(user), body: catalog_form_user_creation_api_body(user))
         if response.code != '200' || response.code != '204'
           resp = get_user_by_email_for_catalog(user)
-          membership_subscribe_by_email(user)
+          # membership_subscribe_by_email(user)
           catalog_form_transaction_api(resp)
         else
-          membership_subscribe_by_email(user)
+          # membership_subscribe_by_email(user)
           catalog_form_transaction_api(response)
         end
       end
