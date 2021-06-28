@@ -163,6 +163,10 @@ module Workarea
           # membership_subscribe_by_email(user)
           catalog_form_transaction_api(response)
         end
+
+        if user.signup_email
+          membership_subscribe_by_email(user)
+        end
       end
       
       # Welcome API#
