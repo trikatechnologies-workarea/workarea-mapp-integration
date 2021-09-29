@@ -17,11 +17,11 @@ module Workarea
     #Triggers the perform method depending on the actions represented in enqueue_on
     def perform(id)
       mapp_integration_flag = Rails.application.secrets.mapp_integration[:flag] rescue nil
-      if mapp_integration_flag == true
-        user = Workarea::User.find(id)
-        # calling membership_unsubscribe_by_email api
-        Workarea::MappIntegration::MappIntegrationGateway.new.membership_unsubscribe_by_email(user)
-      end
+      # if mapp_integration_flag == true
+      #   user = Workarea::User.find(id)
+      #   # calling membership_unsubscribe_by_email api
+      #   Workarea::MappIntegration::MappIntegrationGateway.new.membership_unsubscribe_by_email(user)
+      # end
     end
   end
 end
